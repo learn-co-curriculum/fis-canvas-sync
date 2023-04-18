@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup as bs
 import re
 import pandas as pd
 from datetime import date
-from canvas-interface import get_course_assignments
+from canvas_interface import get_course_assignments
 
 # create a list of the lessons with an external tool
 def list_of_illumidesk_assignments(assignments):
@@ -15,37 +15,39 @@ def list_of_illumidesk_assignments(assignments):
     illumidesk_assign = list(filter(lambda x: "url" in x["external_tool_tag_attributes"].keys() and x["external_tool_tag_attributes"]["url"].startswith("https://flatiron.illumidesk.com"), external_tool_assign))
     return external_tool_assign, illumidesk_assign
 
-def updated_links_df():
+class UpdatedLinksDf:
     """
     pulls the csv file from the saturncloud github repository and saves it as links_updated_{today's date}.csv
-    returns the csv file with duplicates removed as a DataFrame
+    assigns a dataframe to self.df
     """
-    today = date.today().strftime('%m_%d_%Y')
-    file_location = 'https://raw.githubusercontent.com/saturncloud/flatiron-curriculum/main/links.csv'
-    file_raw = requests.get(file_location)
-    file_text = file_raw.text
-    with open(f'links_updated_{today}.csv', 'w') as f:
-        f.write(file_text)
+    def __init__(self):
+        today = date.today().strftime('%m_%d_%Y')
+        file_location = 'https://raw.githubusercontent.com/saturncloud/flatiron-curriculum/main/links.csv'
+        file_raw = requests.get(file_location)
+        file_text = file_raw.text
+        with open(f'links_updated_{today}.csv', 'w') as f:
+            f.write(file_text)
 
-    # create a dataframe of the links for SaturnCloud and remove the notebook file from the name for reference
-    df = pd.read_csv(f'links_updated_{today}.csv', index_col=0)
+        # create a dataframe of the links for SaturnCloud and remove the notebook file from the name for reference
+        df = pd.read_csv(f'links_updated_{today}.csv', index_col=0)
 
-    df['local_path'] = df['local_path'].apply(lambda x: x.split('/')[1])
-    df_final = df.drop_duplicates(subset=['local_path'])
-    return df_final
+        df['local_path'] = df['local_path'].apply(lambda x: x.split('/')[1])
+        df_final = df.drop_duplicates(subset=['local_path'])
+        self.df = df_final
 
-def get_saturn_link(name, df, canvas_instance):
+class GetSaturnLink:
     """
     requires the lesson name, DataFrame with the SaturnCloud links, and the canvas instance
     returns the saturncloud link from within the DataFrame
     """
-    item = df.loc[df['local_path'] == name]
-    if item.empty:
-        link = 'None'
-    else:
-        result = item[canvas_instance]
-        link = result.item()
-    return link
+    def __init__(self, name, df, instance):
+        item = df.loc[df['local_path'] == name]
+        if item.empty:
+            link = 'None'
+        else:
+            result = item[instance]
+            link = result.item()
+        self.link = link
 
 def lesson_name(lesson):
     if lesson['description'] == '':

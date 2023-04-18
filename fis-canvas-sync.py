@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from credentials import credentials
+from credentials import Credentials
 
 """
 this is a script which will allow the user to update, create, and query canvas courses based on the contents of either local repositories or remote github repositories.
@@ -17,6 +17,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    API_KEY, API_PATH = credentials(args.instance)
+    auth = Credentials(args.instance)
     
-    print(API_KEY,API_PATH, args.instance)
+    print(auth.API_KEY,auth.API_PATH, auth.instance)
