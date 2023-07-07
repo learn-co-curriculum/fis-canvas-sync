@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup as bs
 import re
 import pandas as pd
 from datetime import date
-from canvas_interface import get_course_assignments
+import canvas_interface
 
 # create a list of the lessons with an external tool
 def list_of_illumidesk_assignments(assignments):
@@ -25,11 +25,13 @@ class UpdatedLinksDf:
         file_location = 'https://raw.githubusercontent.com/saturncloud/flatiron-curriculum/main/links.csv'
         file_raw = requests.get(file_location)
         file_text = file_raw.text
-        with open(f'links_updated_{today}.csv', 'w') as f:
-            f.write(file_text)
+        df_raw = pd.read_csv(file_text, index_col=0)
+        #with open(f'links_updated_{today}.csv', 'w') as f:
+            #f.write(file_text)
 
         # create a dataframe of the links for SaturnCloud and remove the notebook file from the name for reference
-        df = pd.read_csv(f'links_updated_{today}.csv', index_col=0)
+        #df = pd.read_csv(f'links_updated_{today}.csv', index_col=0)
+        df = df_raw
 
         df['local_path'] = df['local_path'].apply(lambda x: x.split('/')[1])
         df_final = df.drop_duplicates(subset=['local_path'])
@@ -67,7 +69,7 @@ def make_saturn_button(saturn_link):
     return button
 
 def get_intro(repo_markdown):
-        m = re.search(r'<h2>.*?</h2>.*?<h2>.*?</h2>.*?<h.*?>', repo_markdown, re.DOTALL)
+        m = re.search(r'<h2>.*?</h2>.*?<h2>.*?</h2>.*?</ul.*?>', repo_markdown, re.DOTALL)
         s = m.start()
         e = m.end() - len('<h1>')
         target_html = repo_markdown[s:e]
@@ -151,7 +153,7 @@ def update_course(API_KEY, API_PATH, canvas_instance, course_id, df):
     headers = {
         'Authorization': f'Bearer {API_KEY}'
     }
-    assignments = get_course_assignments(API_KEY, API_PATH, course_id)
+    assignments = canvas_interface.Course.get_course_assignments(API_KEY, API_PATH, course_id)
     
     missing_assignments = []
     for assignment in assignments:
@@ -203,7 +205,7 @@ def update_course(API_KEY, API_PATH, canvas_instance, course_id, df):
                     print(name, " had no description, so one was added")
                     new_description = lesson_header + intro + button
 
-                # setting up the payload for delvery
+                # setting up the payload for delivery
 
                 payload = {
                     "assignment[name]": f'{assignment["name"]}',
