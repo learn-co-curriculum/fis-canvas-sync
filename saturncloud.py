@@ -7,6 +7,9 @@ import re
 import pandas as pd
 from datetime import date
 import canvas_interface
+from io import StringIO
+import credentials
+import lesson_content
 
 # create a list of the lessons with an external tool
 def list_of_illumidesk_assignments(assignments):
@@ -25,7 +28,9 @@ class UpdatedLinksDf:
         file_location = 'https://raw.githubusercontent.com/saturncloud/flatiron-curriculum/main/links.csv'
         file_raw = requests.get(file_location)
         file_text = file_raw.text
-        df_raw = pd.read_csv(file_text, index_col=0)
+        file_csv = StringIO(file_raw.text)
+        df_raw = pd.read_csv(file_csv)
+
         #with open(f'links_updated_{today}.csv', 'w') as f:
             #f.write(file_text)
 
@@ -35,6 +40,7 @@ class UpdatedLinksDf:
 
         df['local_path'] = df['local_path'].apply(lambda x: x.split('/')[1])
         df_final = df.drop_duplicates(subset=['local_path'])
+        self.file_name = os.path.join(os.getcwd(), f'{today}.csv')
         self.df = df_final
 
 class GetSaturnLink:
@@ -42,10 +48,11 @@ class GetSaturnLink:
     requires the lesson name, DataFrame with the SaturnCloud links, and the canvas instance
     returns the saturncloud link from within the DataFrame
     """
-    def __init__(self, name, df, instance):
-        item = df.loc[df['local_path'] == name]
+    def __init__(self, lesson, instance, df):
+        item = df.loc[df['local_path'] == lesson]
         if item.empty:
             link = 'None'
+            print(f"There is no SaturnCloud link in the DataFrame for {lesson}")
         else:
             result = item[instance]
             link = result.item()
@@ -149,23 +156,24 @@ def fix_single_sc(API_KEY, API_PATH, canvas_instance, course_id, assignment_id):
             print(name, 'Completed')
 
 def update_course(API_KEY, API_PATH, canvas_instance, course_id, df):
-    
     headers = {
         'Authorization': f'Bearer {API_KEY}'
     }
-    assignments = canvas_interface.Course.get_course_assignments(API_KEY, API_PATH, course_id)
+    course = canvas_interface.Course(API_KEY, API_PATH, course_id)
+    course.get_assignments()
     
     missing_assignments = []
-    for assignment in assignments:
+    for assignment in course.assignments:
         assignment_number = assignment['id']
+        print("assn#=", assignment_number)
         assn_url = f"{API_PATH}/courses/{course_id}/assignments/{assignment_number}"
         assn_response = requests.get(assn_url, headers=headers)
-        lesson = assn_response.json()
-        name, repo_url = lesson_name(lesson)
+        print(assn_response.status_code)
+        lesson = canvas_interface.Assignment(assn_response.json())
+        name = lesson.name
+        
+        print(name)
         if name == "Empty":
-            pass
-
-        elif canvas_instance in lesson['description']:
             pass
 
         else:
@@ -181,48 +189,30 @@ def update_course(API_KEY, API_PATH, canvas_instance, course_id, df):
                 url = f'http://raw.githubusercontent.com/learn-co-curriculum/{name}/{branch}/README.md'
                 resp = requests.get(url)
             resp_text = resp.text
-            repo_markdown = markdown.markdown(resp_text)
+            html = lesson_content.HtmlBody(resp_text, sc=True)
 
-            link = get_saturn_link(name,df, canvas_instance)
-
-            if link == 'None':
-                print(name, 'is not in the DataFrame')
-                missing_assignments.append([name, repo_url])
-                pass
-
-            else:
-                introduction = "<h2>Introduction</h2>"
-                objectives = "<h2>Objectives</h2>"
-
-                button = make_saturn_button(link)
-
-                if introduction in assignment['description'] or objectives in assignment['description']:
-                    lesson_header = assignment['description']
-                    new_description = lesson_header + button
-                else:
-                    lesson_header = assignment['description']
-                    intro = get_intro(repo_markdown)
-                    print(name, " had no description, so one was added")
-                    new_description = lesson_header + intro + button
+            link = GetSaturnLink(name, canvas_instance, df)
+            button = make_saturn_button(link.link)
+            
+            new_description = f'{html.data} {html.header} {html.intro} {button}'
 
                 # setting up the payload for delivery
 
-                payload = {
-                    "assignment[name]": f'{assignment["name"]}',
-                    "assignment[id]": f'{assignment["id"]}',
-                    "assignment[description]": f'{new_description}',
-                    "assignment[submission_types]": ['none'],
-                    "external_tool_tag_attributes": 'none'
-                    }
+            payload = {
+                "assignment[name]": f'{lesson.name}',
+                "assignment[id]": f'{lesson.id}',
+                "assignment[description]": f'{new_description}',
+                "assignment[submission_types]": ['none'],
+                "external_tool_tag_attributes": 'none'
+                }
 
-                assignment_id = assignment["id"]
-            
-                assignment_url = f"{API_PATH}/courses/{course_id}/assignments/{assignment_id}"
+            assignment_id = assignment["id"]
+        
+            assignment_url = f"{API_PATH}/courses/{course_id}/assignments/{assignment_id}"
 
-                put_response = requests.put(assignment_url, headers=headers, data=payload)
-                put_response_json = put_response.json()
-                print(put_response)
-                print(name, 'Completed')
+            put_response = requests.put(assignment_url, headers=headers, data=payload)
+            print(put_response)
+            print(name, 'Completed')
     if len(missing_assignments) >=1:
         assign_df = pd.DataFrame(missing_assignments)
         assign_df.to_csv(f'missing_{canvas_instance}{course_id}.csv', index=False)

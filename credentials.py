@@ -16,13 +16,16 @@ class Credentials:
         AXI_CANVAS_API_KEY
         AXI_CANVAS_API_PATH
         
-    "c" - consumer instance requires the following EN variables:
+    "c" - consumer instance requires the following ENV variables:
         CONSUMER_CANVAS_API_KEY
         CONSUMER_CANVAS_API_PATH
         
-    "v" - vanguard instance requires the following EN variables:
+    "v" - vanguard instance requires the following ENV variables:
         VANGUARD_CANVAS_API_KEY
         VANGUARD_CANVAS_API_PATH
+    "C" - codeclan instance requires the following ENV variables:
+        CODECLAN_CANVAS_API_KEY
+        CODECLAN_CANVAS_API_PATH        
     
     Args:
         instance (_type_): _description_
@@ -52,3 +55,7 @@ class Credentials:
             self.instance = 'vanguard'
             self.API_KEY = os.getenv("VANGUARD_CANVAS_API_KEY")
             self.API_PATH = os.getenv("VANGUARD_CANVAS_API_PATH")
+        if instance == 'C':
+            self.instance = 'codeclan'
+            self.API_KEY = os.getenv("CODECLAN_CANVAS_API_KEY")
+            self.API_PATH = os.getenv("CODECLAN_CANVAS_API_PATH")            
