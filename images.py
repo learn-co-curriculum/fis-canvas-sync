@@ -8,7 +8,7 @@ not_local = True
 
 # repo_url = 'https://github.com/learn-co-curriculum/dsc-git-intro'
 
-subprocess.run(['ssh-agent', '-s'])
+# subprocess.run(['ssh-agent', '-s'])
 git_ssh_identity_file = os.path.expanduser('~/.ssh/id_rsa')
 git_ssh_cmd = 'ssh -i %s' % git_ssh_identity_file
 Git().custom_environment(GIT_SSH_COMMAND=git_ssh_cmd)

@@ -1,5 +1,27 @@
 # FIS-Canvas package
 
+# Installation
+- Clone the repository to your machine.
+- Note the path where you cloned it to. it should be something similar to:
+> /Users/{username}/fis-canvas-sync/
+The main script is named `fis-canvas.py`
+In order to run the script you will need to type the following command in the command line:
+> python /Users/{username}/fis-canvas-sync/fis-canvas.py {arguments}
+
+### Example
+You have the lesson cloned to your local machine and you want to update the content in a consumer course with the course number 6363 and a assignment number 214169. Following is a summary of the necessary information to perform this task:
+{course_id}: 6363 (this is positional)
+{instance}: consumer
+{assignment_number}: 214169
+{lesson_type}: a
+{saturncloud}: yes
+{operation}: update
+
+In order to process this command you would enter the following command:
+
+`python /Users/{username}/fis-canvas-sync/fis-canvas.py fis-canvas 6363 --update --id 214169 --type a --sc`
+
+
 ## fis-canvas.py
 Main 
 Main script which will accept all arguments and execute all necessary functions
@@ -54,5 +76,10 @@ SaturnCloud button will be added to the end if it is a DataScience SaturnCloud l
 
 Images
 Checks for images with relative links and or references and uploads the image to FIS s3 bucket and modifies the img tag to include the updated src reference.
+
+# Usage
+
+## Update an assignment or page
+fis-canvas 6363 --update --id 214169 --type a --sc
 
 
