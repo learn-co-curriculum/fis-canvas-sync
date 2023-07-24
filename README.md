@@ -1,4 +1,5 @@
 # FIS-Canvas package
+This package is meant to be an all inclusive tool for FIS curriculum developers to help with the interaction between canvas, your local machine, and github. This tool will create Pages and Assignments, update existing Pages and Assignments, as well as convert LaTeX equations and upload 
 
 # Installation
 - Clone the repository to your machine.
@@ -8,8 +9,13 @@ The main script is named `fis-canvas.py`
 In order to run the script you will need to type the following command in the command line:
 > python /Users/{username}/fis-canvas-sync/fis-canvas.py {arguments}
 
+### Create an Alias
+In order to make the usage much easier, you may want to create an alias in your `.bash_profile`.   
+To create the alias, simply add the following line to your `.bash_profile`:  
+`alias fis-canvas="python {insert the path to the repository location}/fis-canvas-sync/fis-canvas.py"`
+
 ### Example
-You have the lesson cloned to your local machine and you want to update the content in a consumer course with the course number 6363 and a assignment number 214169. Following is a summary of the necessary information to perform this task:
+You have a lesson cloned to your local machine and you want to update the content in a consumer course with the course number 6363 and a assignment number 214169. Following is a summary of the necessary information to perform this task:
 {course_id}: 6363 (this is positional)
 {instance}: consumer
 {assignment_number}: 214169
@@ -31,7 +37,7 @@ Main script which will accept all arguments and execute all necessary functions
 Canvas course ID as an integer.
 * <--instance>, <-i>
  * Canvas instance
-  * ‘c’ - Consumer
+  - ‘c’ - Consumer
 (Default)
   * ‘e’ - Enterprise
   * ‘m’ - Moringa
