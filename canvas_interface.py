@@ -103,6 +103,15 @@ class Assignment:
         self.course_id = lesson['course_id']
 
 def lesson_title(lesson_url):
+    """Creates a page title from either the H1 tag or the url of the repo.
+
+    Args:
+        lesson_url (str): The github url
+
+    Returns:
+        _type_: _description_
+    """
+    
     lesson_repo = lesson_url.split('/')[-1]
     remove_characters = lesson_repo.split('-')[1:]
     words = []
@@ -120,7 +129,7 @@ class Page:
         
 class Get_lesson:
     def __init__(self, course_id, id, instance, assign_type):
-        """retrieves the lesson contents for a single page or assignment
+        """Initiates a lesson object for a single page or assignment
 
         Args:
             instance (str): your canvas instance abbreviation (consumer: "e" default, enterprise: "e", moringa: "m", academyxi: "a", vangard: "v")
@@ -141,6 +150,12 @@ class Get_lesson:
 
         
     def get_lesson(self):
+        
+        """Retrieves the lesson from canvas and converts the information to an Assignment object
+
+        Returns:
+            Assignment obj: Assignment object
+        """
     
         headers = {
                 'Authorization': f'Bearer {self.API_KEY}'
@@ -157,6 +172,16 @@ class Get_lesson:
         
     
 def create_assignment(instance, remote=True, remote_url=None, sc=False, course_id=0):
+    """Creates a canvas assignment in the course with the course_id provided.
+
+    Args:
+        instance (str): The single letter representation of the instance you are working with. This gets passed to the credentials function to generate the a credentials object
+        remote (bool, optional): Specify whether you are working with a remote repository or a local one. Defaults to True.
+        remote_url (GitHub SSH URL, optional): This is the Github SSH url for the repository you are working on. It must be the SSH clone link for authentication purposes. Defaults to None.
+        sc (bool, optional): Specify if the lesson is a SaturnCloud lesson. if True, the SaturnCloud button will either be created or updated. Defaults to False.
+        course_id (int, optional): This is the course_id of the course you are working on. It defaults to 0 for when it is not necessary. Defaults to 0.
+    """
+    
     auth = credentials.Credentials(instance)
     
     headers = {

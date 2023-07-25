@@ -9,6 +9,24 @@ The main script is named `fis-canvas.py`
 In order to run the script you will need to type the following command in the command line:
 > python /Users/{username}/fis-canvas-sync/fis-canvas.py {arguments}
 
+## Requirements
+
+Authorization and credential handling is handled by credentials.py. Inside you will find a Credentials class which return a credentials object (normally called auth) which contains API_KEY, API_PATH, instance. In order for this to function you will need the proper credentials for the instance you are working with stored as an environment variable formatted in the following manner using enterprise as the example (replace “ENTERPRISE” with the instance of your need.)
+- ENTERPRISE_CANVAS_API_KEY={your api key here}
+- ENTERPRISE_CANVAS_API_PATH=https://my.learn.co/api/v1
+
+For working with the images and uploading to the s3 bucket, you will need the proper credentials set up for the bucket. If you need these you will need to reach out to me. The following credentials are necessary:
+
+- PATH=/usr/local/bin:$PATH
+
+- AWS_ACCESS_KEY_ID={awx access key id}
+
+- AWS_SECRET_ACCESS_KEY={secret access key}
+
+- AWS_REGION={proper region settings}
+
+
+
 ### Create an Alias
 In order to make the usage much easier, you may want to create an alias in your `.bash_profile`.   
 To create the alias, simply add the following line to your `.bash_profile`:  
