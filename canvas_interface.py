@@ -277,7 +277,7 @@ def course_query(instance, course_id, destination=None, output='yml'):
     course_file[0]['modules'] = pages
     
     if output == 'yml':
-        course_contents = yaml.dump(course_file)
+        course_contents = course_file
     if output == 'csv':
         course_items = []
         for module in pages:

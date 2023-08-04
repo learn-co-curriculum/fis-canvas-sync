@@ -11,7 +11,7 @@ In order to run the script you will need to type the following command in the co
 
 ## Requirements
 
-Authorization and credential handling is handled by credentials.py. Inside you will find a Credentials class which return a credentials object (normally called auth) which contains API_KEY, API_PATH, instance. In order for this to function you will need the proper credentials for the instance you are working with stored as an environment variable formatted in the following manner using enterprise as the example (replace “ENTERPRISE” with the instance of your need.)
+Authorization and credential handling is handled by [credentials.py](#credentials.py). Inside you will find a Credentials class which return a credentials object (normally called auth) which contains API_KEY, API_PATH, instance. In order for this to function you will need the proper credentials for the instance you are working with stored as an environment variable formatted in the following manner using enterprise as the example (replace “ENTERPRISE” with the instance of your need.)
 - ENTERPRISE_CANVAS_API_KEY={your api key here}
 - ENTERPRISE_CANVAS_API_PATH=https://my.learn.co/api/v1
 
@@ -32,6 +32,8 @@ In order to make the usage much easier, you may want to create an alias in your 
 To create the alias, simply add the following line to your `.bash_profile`:  
 `alias fis-canvas="python {insert the path to the repository location}/fis-canvas-sync/fis-canvas.py"`
 
+> [Creating an alias](https://wpbeaches.com/make-an-alias-in-bash-or-zsh-shell-in-macos-with-terminal/)
+
 ### Example
 You have a lesson cloned to your local machine and you want to update the content in a consumer course with the course number 6363 and a assignment number 214169. Following is a summary of the necessary information to perform this task:
 {course_id}: 6363 (this is positional)
@@ -41,7 +43,7 @@ You have a lesson cloned to your local machine and you want to update the conten
 {saturncloud}: yes
 {operation}: update
 
-In order to process this command you would enter the following command:
+In order to process this request you would enter the following command:
 
 `python /Users/{username}/fis-canvas-sync/fis-canvas.py fis-canvas 6363 --update --id 214169 --type a --sc`
 

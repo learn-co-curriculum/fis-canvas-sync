@@ -19,6 +19,8 @@ class HtmlBody:
         self.name = lesson_name(lesson)
         self.title = make_title(self.markdown)
         self.intro = get_intro(self.markdown)
+        self.data = make_data_element(self.html, lesson_url)
+        self.header = make_header(self.html, lesson_url)
         self.url = lesson_url
 
 def make_header(html, url):

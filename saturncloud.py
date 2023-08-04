@@ -49,8 +49,6 @@ class GetSaturnLink:
     returns the saturncloud link from within the DataFrame
     """
     def __init__(self, repo, instance, df):
-        print(f'sc repo {repo}')
-        print(df.head())
         print(df.loc[df['local_path'] == repo])
         item = df.loc[df['local_path'] == repo]
         if item.empty:
