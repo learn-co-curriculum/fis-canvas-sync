@@ -49,6 +49,7 @@ class GetSaturnLink:
     returns the saturncloud link from within the DataFrame
     """
     def __init__(self, repo, instance, df):
+        
         print(df.loc[df['local_path'] == repo])
         item = df.loc[df['local_path'] == repo]
         if item.empty:
@@ -74,7 +75,7 @@ def lesson_name(lesson):
 # takes the result of get_saturn_link and returns a functional button with the link to the saturncloud lesson
 def make_saturn_button(saturn_link):
     today = date.today().strftime('%m_%d_%Y')
-    button = f"""<p id="saturncloud_button_{today}"><span style="color: #34495e;"><span style="font-size: 24pt; background-color: #3598db; border: 2px solid;"><a class="inline_disabled" style="background-color: #3598db; color: #34495e;" href="{saturn_link}" target="_blank" rel="noopener"><span style="background-color: #ced4d9;">&nbsp;Click Here to Launch Lesson&nbsp;</span></a></span></span></p>"""
+    button = f"""<p><meta name="SC-link-update" content="{today}"><span style="color: #34495e;"><span style="font-size: 24pt; background-color: #3598db; border: 2px solid;"><a class="inline_disabled" style="background-color: #3598db; color: #34495e;" href="{saturn_link}" target="_blank" rel="noopener"><span title="Launch will navigate to SaturnCloud before Jupyter Notebook" style="background-color: #ced4d9;">&nbsp;Click Here to Launch Lesson&nbsp;</span></a></span></span></p>"""
     return button
 
 def get_intro(repo_markdown):
@@ -92,70 +93,60 @@ def fix_single_sc(API_KEY, API_PATH, canvas_instance, course_id, assignment_id):
     
     assn_url = f"{API_PATH}/courses/{course_id}/assignments/{assignment_id}"
     assn_response = requests.get(assn_url, headers=headers)
-    lesson = assn_response.json()
-    name, repo_url = lesson_name(lesson)
+    print(f'pulled canvas content {assn_response.status_code}')
+    lesson = canvas_interface.Assignment(assn_response.json())
+    name = lesson.name
+    lesson_url = lesson.url.split('/')[-1]
     if name == "Empty" or name == '':
         pass
 
-    elif canvas_instance in lesson['description']:
+    # elif canvas_instance in lesson['description']:
         pass
 
     else:
-        print(f'Pulling HTML from {name}')
+        print(f'Pulling HTML from {lesson_url}')
         try:
             branch = 'main'
-            url = f'http://raw.githubusercontent.com/learn-co-curriculum/{name}/{branch}/README.md'
+            url = f'http://raw.githubusercontent.com/learn-co-curriculum/{lesson_url}/{branch}/README.md'
             resp = requests.get(url)
             resp.raise_for_status()
             print(f'{branch} pulled')
         except:
-            print(f'Branch is not: {branch}')
+            print(f'Branch is not: {branch} pulling master')
             branch = 'master'
-            url = f'http://raw.githubusercontent.com/learn-co-curriculum/{name}/{branch}/README.md'
+            url = f'http://raw.githubusercontent.com/learn-co-curriculum/{lesson_url}/{branch}/README.md'
             resp = requests.get(url)
-        resp_text = resp.text
-        repo_markdown = markdown.markdown(resp_text)
+            if resp.status_code == '200':
+                print(f'{branch} pulled')
+        github_content = resp.text
+        print(github_content[:100])
+        html = lesson_content.HtmlBody(lesson.content, github_content, lesson_url)
 
         df = UpdatedLinksDf()
 
-        link = GetSaturnLink(name, df, canvas_instance)
+        link = GetSaturnLink(lesson_url, canvas_instance, df.df)
 
-        if link == 'None':
-            print(name, 'is not in the DataFrame')
-            pass
-
-        else:
-            introduction = "<h2>Introduction</h2>"
-            objectives = "<h2>Objectives</h2>"
-
-            button = make_saturn_button(link.link)
-
-            if introduction in lesson['description'] or objectives in lesson['description']:
-                lesson_header = lesson['description']
-                new_description = lesson_header + button
-            else:
-                lesson_header = lesson['description']
-                intro = get_intro(repo_markdown)
-                print(name, " had no description, so one was added")
-                new_description = lesson_header + intro + button
+        button = make_saturn_button(link.link)
+        
+        new_description = f'{html.data}\n{html.header}\n{html.intro}\n{button}'
 
             # setting up the payload for delivery
 
-            payload = {
-                "assignment[name]": f'{lesson["name"]}',
-                "assignment[id]": f'{lesson["id"]}',
-                "assignment[description]": f'{new_description}',
-                "assignment[submission_types]": ['none'],
-                "external_tool_tag_attributes": 'none'
-                }
+        payload = {
+            "assignment[name]": lesson.name,
+            "assignment[id]": lesson.id,
+            "assignment[description]": new_description,
+            "assignment[submission_types]": ['none'],
+            "external_tool_tag_attributes": 'none'
+            }
 
-            assignment_id = lesson["id"]
-        
-            assignment_url = f"{API_PATH}/courses/{course_id}/assignments/{assignment_id}"
+        assignment_id = lesson.id
+    
+        assignment_url = f"{API_PATH}/courses/{course_id}/assignments/{assignment_id}"
 
-            put_response = requests.put(assignment_url, headers=headers, data=payload)
-            print(put_response)
-            print(name, 'Completed')
+        put_response = requests.put(assignment_url, headers=headers, data=payload)
+        print(put_response)
+        print(name, 'Completed')
 
 def update_course(API_KEY, API_PATH, canvas_instance, course_id, df):
     headers = {

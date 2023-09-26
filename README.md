@@ -34,19 +34,6 @@ To create the alias, simply add the following line to your `.bash_profile`:
 
 > [Creating an alias](https://wpbeaches.com/make-an-alias-in-bash-or-zsh-shell-in-macos-with-terminal/)
 
-### Example
-You have a lesson cloned to your local machine and you want to update the content in a consumer course with the course number 6363 and a assignment number 214169. Following is a summary of the necessary information to perform this task:
-{course_id}: 6363 (this is positional)
-{instance}: consumer
-{assignment_number}: 214169
-{lesson_type}: a
-{saturncloud}: yes
-{operation}: update
-
-In order to process this request you would enter the following command:
-
-`python /Users/{username}/fis-canvas-sync/fis-canvas.py fis-canvas 6363 --update --id 214169 --type a --sc`
-
 
 ## fis-canvas.py
 Main 
@@ -106,6 +93,31 @@ Checks for images with relative links and or references and uploads the image to
 # Usage
 
 ## Update an assignment or page
-fis-canvas 6363 --update --id 214169 --type a --sc
+The following is to update an assignment that is local on your machine
+`fis-canvas 6363 --update --id 214169 --type a --sc`
+
+The following is to update a page from a remote GitHub repository. Notice that a page requires the sluggified name of the canvas page.
+`fis-canvas 6948 --update --id setting-up-a-professional-data-science-environment-windows-installation --type p --remote --remote_url https://github.com/learn-co-curriculum/dsc-data-science-env-windows-installation`
+
+
+
+
+
+### Example
+You have a lesson cloned to your local machine and you want to update the content in a consumer course with the course number 6363 and a assignment number 214169. Following is a summary of the necessary information to perform this task:
+{course_id}: 6363 (this is positional and should always be the first argument provided)
+{instance}: consumer
+{assignment_number}: 214169
+{lesson_type}: a
+{saturncloud}: yes
+{operation}: update
+
+In order to process this request you would enter the following command:
+
+`python /Users/{username}/fis-canvas-sync/fis-canvas.py fis-canvas 6363 --update --id 214169 --type a --sc`
+
+If you have created an alias for the package, you would enter the following command:
+
+`fis-canvas 6363 --update --id 214169 --type a --sc`
 
 

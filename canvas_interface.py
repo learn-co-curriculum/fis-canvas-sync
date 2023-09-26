@@ -89,7 +89,7 @@ class Course:
         self.number_of_assignments = len(saturncloud_assign)
     
 class Assignment:
-    def __init__(self, lesson):
+    def __init__(self, lesson, course_id, instance):
         """takes one element of a json response from course.get_course_assignments and converts it to an Assignment object. If creating a new assignment you can pass the information as a dictionary
 
         Args:
@@ -100,7 +100,9 @@ class Assignment:
         self.submissions = lesson['submission_types']
         self.url = lesson_content.lesson_name(lesson['description'])[1]
         self.name = lesson_title(self.url)
-        self.course_id = lesson['course_id']
+        self.course_id = course_id
+        self.type = "assignment"
+        self.instance = instance
 
 def lesson_title(lesson_url):
     """Creates a page title from either the H1 tag or the url of the repo.
@@ -124,8 +126,13 @@ def lesson_title(lesson_url):
     return ' '.join(words)
             
 class Page:
-    def __init__(self, lesson):
+    def __init__(self, lesson, course_id, instance):
         self.id = lesson['url']
+        self.type = "page"
+        self.instance = instance
+        self.course_id = course_id
+        self.canvas_url = lesson['html_url']
+        self.name = lesson['title']
         
 class Get_lesson:
     def __init__(self, course_id, id, instance, assign_type):
@@ -143,10 +150,11 @@ class Get_lesson:
         self.API_PATH = auth.API_PATH
         self.course_id = course_id
         self.id = id
+        self.instance = instance
         if assign_type == "a":
             self.type = "assignment"
         else:
-            assign_type = "page"
+            self.type = "page"
 
         
     def get_lesson(self):
@@ -162,13 +170,12 @@ class Get_lesson:
             }
         assn_url = f"{self.API_PATH}/courses/{self.course_id}/{self.type}s/{self.id}"
         assn_response = requests.get(assn_url, headers=headers)
-        print(assn_url, "\n", assn_response.status_code)
         #return Assignment(assn_response.json())
         lesson = assn_response.json()
         if self.type == "page":
-            return Page(lesson)
+            return Page(lesson, self.course_id, self.instance)
         if self.type == "assignment":
-            return Assignment(lesson)
+            return Assignment(lesson, self.course_id, self.instance)
         
     
 def create_assignment(instance, remote=True, remote_url=None, sc=False, course_id=0):
@@ -227,10 +234,10 @@ def create_page(instance, course_id=0, remote=True, remote_url=None, sc=False):
         content = lesson_content.LocalContent(auth.instance, sc)
     
     if sc:
-        new_description = f'{content.data_element} {content.header} {content.intro} {content.button}'
+        new_description = f'{content.data_element} {content.header} {content.intro} {content.button} {content.meta}'
         
     else:
-        new_description = f'{content.data_element} {content.header} {content.html}'
+        new_description = f'{content.data_element} {content.header} {content.html} {content.meta}'
 
         # setting up the payload for delivery
 
@@ -288,7 +295,7 @@ def course_query(instance, course_id, destination=None, output='yml'):
     return course_contents
 
 
-def update_lesson(lesson, instance, sc, remote, remote_url=''):
+def update_lesson(lesson, instance, sc, remote, course_id, remote_url=''):
     auth = credentials.Credentials(instance)
     
     headers = {
@@ -296,28 +303,41 @@ def update_lesson(lesson, instance, sc, remote, remote_url=''):
             }
 
     if remote:
-        content = lesson_content.GithubContent(auth.instance, sc, remote_url)
+        content = lesson_content.GithubContent(lesson, auth.instance, sc, remote_url, course_id)
     else:
-        content = lesson_content.LocalContent(auth.instance, sc)
+        content = lesson_content.LocalContent(auth.instance, course_id, sc)
     
     if sc:
-        new_description = f'{content.data_element} {content.header} {content.intro} {content.button}'
+        new_description = f'{content.data_element} {content.header} {content.intro} {content.button} {content.meta}'
         
     else:
-        new_description = f'{content.data_element} {content.header} {content.html}'
+        new_description = f'{content.data_element} {content.header} {content.html} {content.meta}'
 
         # setting up the payload for delivery
+        
+    if lesson.type == 'a':
 
-    payload = {
-        "assignment[name]": lesson.name,
-        "assignment[id]": lesson.id,
-        "assignment[description]": new_description,
-        "assignment[submission_types]": ['none'],
-        "external_tool_tag_attributes": 'none'
+        payload = {
+            "assignment[name]": lesson.name,
+            "assignment[id]": lesson.id,
+            "assignment[description]": new_description,
+            "assignment[submission_types]": ['none'],
+            "external_tool_tag_attributes": 'none'
+            }
+
+        assignment_url = f"{auth.API_PATH}/courses/{lesson.course_id}/assignments/{lesson.id}"
+
+        put_response = requests.put(assignment_url, headers=headers, data=payload)
+        print(lesson.name, 'Completed')
+        print(f"The lesson can be found at: {put_response.json()['html_url']}")
+    
+    if lesson.type == 'page':
+        payload = {
+        "wiki_page[body]": new_description
         }
 
-    assignment_url = f"{auth.API_PATH}/courses/{lesson.course_id}/assignments/{lesson.id}"
+        page_url = f"{auth.API_PATH}/courses/{course_id}/pages/{content.slug}"
 
-    put_response = requests.put(assignment_url, headers=headers, data=payload)
-    print(lesson.name, 'Completed')
-    print(f"The lesson can be found at: {put_response.json()['html_url']}")
+        put_response = requests.put(page_url, headers=headers, data=payload)
+        print(content.name, 'Completed')
+        print(f"The lesson can be found at: {put_response.json()['url']}")

@@ -1,58 +1,75 @@
 # create the .canvas file and push to the remote repository
 import yaml
+import base64
 
-def create_assignment_dot_file(lesson, course):
+def create_assignment_dot_file(lesson):
     lesson_data = {
-        'lessons': [
+        ':lessons': [
             {
-            "id": lesson.id,
-            "course_id": course.id,
-            "instance": course.instance,
-            "canvas_url": lesson.canvas_url,
-            "type": lesson.type,
-            "grading_type": lesson.grading_type,
-            "points_possible": lesson.points,
-            "submission_type": lesson.submissions
+            ":id": lesson.id,
+            ":course_id": lesson.course_id,
+            ":instance": lesson.instance,
+            ":canvas_url": lesson.canvas_url,
+            ":type": lesson.type,
             }
         ]
     }  
-    return yaml.dump(lesson_data)
+    lesson_yaml = yaml.dump(lesson_data)
+    return base64.b64encode(lesson_yaml.encode()).decode()
 
-def create_page_dot_file(lesson, course):
+def create_page_dot_file(lesson):
     lesson_data = {
-        'lessons': [
+        ':lessons': [
             {
-                'id': lesson.id,
-                'course_id': course.id,
-                'canvas_url': lesson.canvas_url,
-                'type': lesson.type
+                ':id': lesson.id,
+                ':course_id': lesson.course_id,
+                ':instance': lesson.instance,
+                ':canvas_url': lesson.canvas_url,
+                ':type': lesson.type
             }
         ]
     }
+    lesson_yaml = yaml.dump(lesson_data)
+    return base64.b64encode(lesson_yaml.encode()).decode()
 
-def update_assignment_dot_file(lesson, course, yaml_file):
-    canvas_data = yaml.load(yaml_file)
-    lesson_data = {
-                'id': lesson.id,
-                'course_id': course.id,
-                'instance': course.instance,
-                'canvas_url': lesson.canvas_url,
-                'type': lesson.type
-            }
-    updated_file = canvas_data['lessons'].update(lesson_data)
-    return updated_file
+def update_assignment_dot_file(lesson, yaml_file):
+    canvas_data = yaml.safe_load(yaml_file)
+    course_list = []
+    for item in canvas_data[':lessons']:
+        course_list.append(item[':course_id'])
+    if item[':course_id'] in course_list:
+        print("The .canvas file already contains the data for this lesson")
+        updated_file_yaml = yaml.dump(canvas_data)
+        return base64.b64encode(updated_file_yaml.encode()).decode()
+    else:
+        lesson_data = {
+                    ':id': lesson.id,
+                    ':course_id': lesson.course_id,
+                    ':instance': lesson.instance,
+                    ':canvas_url': lesson.canvas_url,
+                    ':type': lesson.type
+                }
+        canvas_data[':lessons'].update(lesson_data)
+        updated_file_yaml = (yaml.dump(canvas_data))
+        return base64.b64encode(updated_file_yaml.encode()).decode()
 
-def update_page_dot_file(lesson, course, yaml__file):
-    canvas_data = yaml.load(yaml__file)
-    lesson_data = {
-            "id": lesson.id,
-            "course_id": course.id,
-            "instance": course.instance,
-            "canvas_url": lesson.canvas_url,
-            "type": lesson.type,
-            "grading_type": lesson.grading_type,
-            "points_possible": lesson.points,
-            "submission_type": lesson.submissions
-            }
-    updated_file = canvas_data['lessons'].update(lesson_data)
-    return updated_file
+def update_page_dot_file(lesson, yaml__file):
+    canvas_data = yaml.safe_load(yaml__file)
+    course_list = []
+    for item in canvas_data[':lessons']:
+        course_list.append(item[':course_id'])
+    if item[':course_id'] in course_list:
+        print("The .canvas file already contains the data for this lesson")
+        updated_file_yaml = yaml.dump(canvas_data)
+        return base64.b64encode(updated_file_yaml.encode()).decode()
+    else:
+        lesson_data = {
+                ":id": lesson.id,
+                ":course_id": lesson.course_id,
+                ":instance": lesson.instance,
+                ":canvas_url": lesson.canvas_url,
+                ":type": lesson.type,
+                }
+        canvas_data[':lessons'].append(lesson_data)
+        updated_file_yaml = (yaml.dump(canvas_data))
+        return base64.b64encode(updated_file_yaml.encode()).decode()

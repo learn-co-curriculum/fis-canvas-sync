@@ -55,7 +55,4 @@ class Credentials:
             self.instance = 'vanguard'
             self.API_KEY = os.getenv("VANGUARD_CANVAS_API_KEY")
             self.API_PATH = os.getenv("VANGUARD_CANVAS_API_PATH")
-        if instance == 'C':
-            self.instance = 'codeclan'
-            self.API_KEY = os.getenv("CODECLAN_CANVAS_API_KEY")
-            self.API_PATH = os.getenv("CODECLAN_CANVAS_API_PATH")            
+          
